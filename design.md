@@ -111,7 +111,7 @@ pages
 将所有的json都看作一棵小树。那么把所有这些树并在一起将得到一棵大树。这些小树和大树都是三层，最上一层是根，中间一层是fields，最下一层
 是values。叶子节点包含一个指向Posting list的指针。
 
-在磁盘上存放这棵树时，我们采用如下方案：
+这颗大树实际上就是一个以path为term的覆盖所有小树的倒排索引。为在磁盘上存放这棵大树，我们采用如下方案：
 
 每一条从根到叶子节点的路径被称为一个term，比如/age/45, /age/“middle age"。
 搞一个B+-tree或者Bw-tree来索引这些term。
@@ -127,3 +127,8 @@ pages
 1. 分析查询得到term "/age/30"
 2. 搜索term b-tree索引遍历所有/age/nnn (nnn>30), 从而得到一个posting list的并集
 3. 再通过key-value存储，以posting list中的id为key读取原始Json.
+
+这种方案的好处是：1）所有json对象的所有fields都被自动索引了，不需要用户告诉系统哪些fields需要被索引；2）把field和value统一到一棵树中，
+使得索引的设计更纯粹。
+
+和方案二相比的空间分析？时间分析？CUD操作的具体过程？
