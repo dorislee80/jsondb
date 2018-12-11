@@ -132,3 +132,33 @@ pages
 使得索引的设计更纯粹。
 
 和方案二相比的空间分析？时间分析？CUD操作的具体过程？
+
+插入操作如下：
+1. 将待插入的json分解成由路径组成的paths（即terms），这是我们得到一个path数组。比如，对上面的json1，我们得到”/name/John", "/age/45", 和
+"/gender/M"这三个terms。
+2. 给json分配一个id（此处我们假设该json的id为4）。
+3. 将json4插入key-value存储
+4. 将组成json4的所有terms插入B+-tree。插入一个term的流程如下
+4.1 遵循B+-tree标准算法插入term
+4.2 读取posting list，将4加入posting list
+
+删除操作如下：
+1. 使用id，从key-value存储中读到json，并删除json
+2. 把json分解成terms
+3. 对每个term
+3.1 在b+-TREE中找到term，并读取其posting list。
+3.2 如果Posting list只包含这一个id，那么将posting list和term一起从b+-tree删除
+3.3 如果posting list还包含其它id，将id从posting list中移除
+
+Update操作如下：
+1. 使用id，从key-value存储中读到旧的json，然后用新json进行覆盖
+2. 将旧Json分解成terms，得到oldTerms
+3. 将新json分解成terms，得到newTerms
+4. 计算出deletedTerms, newAddedTerms
+5. foreach deleterdTerms
+5.1 从b+-tree中找到term，并读取其posting list
+5.2 如果Posting list只包含这一个id，那么将posting list和term一起从b+-tree删除
+5.3 如果posting list还包含其它id，将id从posting list中移除
+6. foreach newAddedTerms
+6.1 如果该terms在b+tree中不存在，则插入
+6.2 读取posting list，加入id
