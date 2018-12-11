@@ -108,7 +108,7 @@ pages
 3. 再通过hash-based的id索引，一一读出原始json对象
 
 ### 思路三 Azure CosmosDB
-将所有的json都看作一棵小树。那么把所有这些树并在一起将得到一棵大树。这些小树和大树都是三层，最上一层是根，中间一层是fields，最下一层
+借鉴Azure CosmosDB schema-agnostic indexing的设计思路，将所有的json都看作一棵小树。那么把所有这些树并在一起将得到一棵大树。这些小树和大树都是三层，最上一层是根，中间一层是fields，最下一层
 是values。叶子节点包含一个指向Posting list的指针。
 
 这颗大树实际上就是一个以path为term的覆盖所有小树的倒排索引。为在磁盘上存放这棵大树，我们采用如下方案：
@@ -131,7 +131,7 @@ pages
 这种方案的好处是：1）所有json对象的所有fields都被自动索引了，不需要用户告诉系统哪些fields需要被索引；2）把field和value统一到一棵树中，
 使得索引的设计更纯粹。
 
-和方案二相比的空间分析？时间分析？CUD操作的具体过程？
+和方案二相比的空间分析？时间分析？
 
 插入操作如下：
 1. 将待插入的json分解成由路径组成的paths（即terms），这是我们得到一个path数组。比如，对上面的json1，我们得到”/name/John", "/age/45", 和
@@ -162,3 +162,7 @@ Update操作如下：
 6. foreach newAddedTerms
 6.1 如果该terms在b+tree中不存在，则插入
 6.2 读取posting list，加入id
+
+#### 更多的优化
+Posting list的可以用Word-aligned hybrid进行编码。
+Term索引可以用标准的B+-tree，也可以考虑使用Bw-tree。
