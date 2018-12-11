@@ -164,5 +164,6 @@ Update操作如下：
 6.2 读取posting list，加入id
 
 #### 更多的优化
-Posting list的可以用Word-aligned hybrid进行编码。
-Term索引可以用标准的B+-tree，也可以考虑使用Bw-tree。
+1. Posting list的可以用Word-aligned hybrid进行编码。
+2. Term索引可以用标准的B+-tree，也可以考虑使用Bw-tree。
+3. 为提升点查询的性能可考虑引入针对path的bloom filter。
