@@ -139,8 +139,8 @@ pages
 2. 给json分配一个id（此处我们假设该json的id为4）。
 3. 将json4插入key-value存储
 4. 将组成json4的所有terms插入B+-tree。插入一个term的流程如下
-4.1 遵循B+-tree标准算法插入term
-4.2 读取posting list，将4加入posting list
+  * 遵循B+-tree标准算法插入term
+  * 读取posting list，将4加入posting list
 
 删除操作如下：
 1. 使用id，从key-value存储中读到json，并删除json
@@ -167,3 +167,4 @@ Update操作如下：
 1. Posting list的可以用Word-aligned hybrid进行编码。
 2. Term索引可以用标准的B+-tree，也可以考虑使用Bw-tree。
 3. 为提升点查询的性能可考虑引入针对path的bloom filter。
+4. 在实现上，可以借鉴ScyllaDB的做法，根据CPU CORE的数量，将数据分区，每个core处理一个分区。为此，对读操作需要引入一个聚合过程。
