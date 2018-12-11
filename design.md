@@ -106,3 +106,24 @@ pages
 1. 先根据hash-based field index找到age对应的倒排索引
 2. 再通过b+-tree-based的term index发现所有值为数值且大于30的所有term，并求出这些posting lists的并集
 3. 再通过hash-based的id索引，一一读出原始json对象
+
+### 思路三 Azure CosmosDB
+将所有的json都看作一棵小树。那么把所有这些树并在一起将得到一棵大树。这些小树和大树都是三层，最上一层是根，中间一层是fields，最下一层
+是values。叶子节点包含一个指向Posting list的指针。
+
+在磁盘上存放这棵树时，我们采用如下方案：
+
+每一条从根到叶子节点的路径被称为一个term，比如/age/45, /age/“middle age"。
+搞一个B+-tree或者Bw-tree来索引这些term。
+
+再有一个单独的key-value存储（比如采用rockdb）来存放id -> 原始Json。
+
+现在看看第一个查询的执行过程：
+1. 分析查询得到term "/name/John"
+2. 搜索term b-tree索引找到/name/John，从而得到其对应的Posting list
+3. 再通过key-value存储，以posting list中的id为key读取原始Json.
+
+第二个查询的执行过程
+1. 分析查询得到term "/age/30"
+2. 搜索term b-tree索引遍历所有/age/nnn (nnn>30), 从而得到一个posting list的并集
+3. 再通过key-value存储，以posting list中的id为key读取原始Json.
